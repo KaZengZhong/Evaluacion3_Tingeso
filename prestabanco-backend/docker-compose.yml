@@ -1,0 +1,139 @@
+version: "3.8"
+services:
+
+  postgres-db:
+    image: postgres:17
+    container_name: prestabanco-postgres
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: prestabanco
+    ports:
+      - 54320:5432
+    networks:
+      - backend-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend1:
+    image: kahaozeng/prestabanco-frontend
+    container_name: prestabanco-frontend1
+    environment:
+      - VITE_PRESTABANCO_BACKEND_SERVER=191.234.178.44
+      - VITE_PRESTABANCO_BACKEND_PORT=8090
+    networks:
+      - frontend-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  frontend2:
+    image: kahaozeng/prestabanco-frontend
+    container_name: prestabanco-frontend2
+    environment:
+      - VITE_PRESTABANCO_BACKEND_SERVER=191.234.178.44
+      - VITE_PRESTABANCO_BACKEND_PORT=8090
+    networks:
+      - frontend-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  frontend3:
+    image: kahaozeng/prestabanco-frontend
+    container_name: prestabanco-frontend3
+    environment:
+      - VITE_PRESTABANCO_BACKEND_SERVER=191.234.178.44
+      - VITE_PRESTABANCO_BACKEND_PORT=8090
+    networks:
+      - frontend-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  backend1:
+    container_name: prestabanco-backend1
+    image: kahaozeng/prestabanco-backend
+    environment:
+      - DB_HOST=postgres-db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/prestabanco
+    networks:
+      - backend-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  backend2:
+    container_name: prestabanco-backend2
+    image: kahaozeng/prestabanco-backend
+    environment:
+      - DB_HOST=postgres-db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/prestabanco
+    networks:
+      - backend-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  backend3:
+    container_name: prestabanco-backend3
+    image: kahaozeng/prestabanco-backend
+    environment:
+      - DB_HOST=postgres-db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/prestabanco
+    networks:
+      - backend-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  nginx-frontend:
+    image: nginx:latest
+    container_name: nginx-frontend
+    ports:
+      - "8070:80"
+    volumes:
+      - ./nginx-frontend.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend1
+      - frontend2
+      - frontend3
+    networks:
+      - frontend-network
+
+  nginx-backend:
+    image: nginx:latest
+    container_name: nginx-backend
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./nginx-backend.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
+    networks:
+      - backend-network
+
+networks:
+  frontend-network:
+  backend-network:
+
+
+
+
+
+
+
+

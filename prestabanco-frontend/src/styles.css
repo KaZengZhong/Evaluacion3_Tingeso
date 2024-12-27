@@ -1,0 +1,52 @@
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.main-content {
+    width: 100%;
+    min-height: calc(100vh - 56px); /* Altura total menos altura del navbar */
+}
+
+.navbar {
+    width: 100%;
+    background-color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+section {
+    width: 100%;
+    padding: 40px 0;
+}
+
+.hero-simple {
+    background-color: #f8f9fa;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+.card {
+    transition: transform 0.2s;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.btn {
+    padding: 10px 20px;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+}
