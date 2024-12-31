@@ -38,6 +38,7 @@ const updateStatus = (id, newStatus) => {
 };
 
 
+
 const applicationService = { 
     getAll, 
     create, 
@@ -50,5 +51,6 @@ const applicationService = {
     updateStatus,
  
 };
+
 
 export default applicationService;

@@ -116,12 +116,15 @@ function ApplicationStatus() {
 
     return (
         <Box sx={{ 
+            position: 'absolute',
+            width: '100%',
+            left: 0,
             minHeight: '100vh', 
             bgcolor: 'background.default',
             pt: 10,
             pb: 4
         }}>
-            <Container maxWidth="lg" sx={{ ml: { xs: 4, sm: 8, md: 40 }, mr: 'auto' }}>
+            <Container maxWidth="lg">
                 {error && (
                     <Alert severity="error" sx={{ mb: 3 }}>
                         {error}

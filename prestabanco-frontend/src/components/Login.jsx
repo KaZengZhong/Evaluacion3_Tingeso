@@ -23,6 +23,9 @@ const Login = () => {
 
     return (
         <Box sx={{ 
+            position: 'absolute',
+            width: '100%',
+            left: 0,
             minHeight: '100vh', 
             bgcolor: 'background.default',
             pt: 10,
@@ -30,7 +33,7 @@ const Login = () => {
             display: 'flex',
             justifyContent: 'center'
         }}>
-            <Container maxWidth="sm" sx={{ ml: { xs: 4, sm: 8, md: 55 }, mr: 'auto' }}>
+            <Container maxWidth="sm">
                 <Card sx={{ boxShadow: 3 }}>
                     <CardContent sx={{ p: 4 }}>
                         <Typography variant="h4" component="h1" gutterBottom textAlign="center">

@@ -11,4 +11,5 @@ public interface DocumentRepository extends JpaRepository<DocumentEntity, Long> 
     List<DocumentEntity> findByApplicationId(Long applicationId);
 
 
+
 }

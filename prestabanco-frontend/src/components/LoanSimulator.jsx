@@ -71,14 +71,14 @@ const LoanSimulator = () => {
 
     return (
         <Box sx={{ 
-            minHeight: '100vh', 
-            bgcolor: 'background.default',
-            pt: 10,
-            pb: 4,
-            display: 'flex',
-            justifyContent: 'center'
+            position: 'absolute',
+            width: '100%',
+            left: 0,
+            display: 'flex', 
+            justifyContent: 'center',
+            mt: 8 
         }}>
-            <Container maxWidth="sm" sx={{ ml: { xs: 4, sm: 8, md: 60 }, mr: 'auto' }}>
+             <Container maxWidth="sm">
                 <Card sx={{ boxShadow: 3, mb: 4 }}>
                     <CardContent sx={{ p: 4 }}>
                         <Typography variant="h4" component="h1" gutterBottom textAlign="center">

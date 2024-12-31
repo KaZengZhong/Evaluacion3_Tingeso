@@ -18,14 +18,16 @@ const Home = () => {
    };
 
    return (
-       <Box sx={{ 
-           minHeight: '100vh', 
-           width: '100%',
-           bgcolor: 'background.default', 
-           pt: 10,
-           pb: 4
+       <Box sx={{   
+            position: 'absolute',
+            width: '100%',
+            left: 0,
+            minHeight: '100vh',
+            bgcolor: 'background.default', 
+            pt: 10,
+            pb: 4
        }}>
-           <Container maxWidth="lg" sx={{ ml: { xs: 2, sm: 4, md: 18 }, mr: 'auto' }}>
+           <Container maxWidth="lg">
                {connectionStatus && (
                    <Alert 
                        severity={connectionStatus.type} 

@@ -3,6 +3,7 @@ package com.prestabanco.services;
 import com.prestabanco.entities.ApplicationEntity;
 import com.prestabanco.entities.UserEntity;
 import com.prestabanco.repositories.ApplicationRepository;
+import com.prestabanco.repositories.DocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ public class ApplicationService {
 
     @Autowired
     private ApplicationRepository applicationRepository;
+    
 
 
     public ApplicationEntity createApplication(ApplicationEntity application) {

@@ -67,11 +67,40 @@ const LoanApplication = () => {
         { value: 'RENOVATION', label: 'Remodelación', minRate: 4.5, maxRate: 6.0 }
     ];
 
-    const requiredDocuments = [
-        { key: 'incomeProof', label: 'Comprobante de Ingresos' },
-        { key: 'propertyAppraisal', label: 'Certificado de Avalúo' },
-        { key: 'creditHistory', label: 'Historial Crediticio' }
-    ];
+    
+
+    const getRequiredDocuments = (propertyType) => {
+        switch (propertyType) {
+            case 'FIRST_HOME':
+                return [
+                    { key: 'incomeProof', label: 'Comprobante de ingresos' },
+                    { key: 'propertyAppraisal', label: 'Certificado de avalúo' },
+                    { key: 'creditHistory', label: 'Historial crediticio' }
+                ];
+            case 'SECOND_HOME':
+                return [
+                    { key: 'incomeProof', label: 'Comprobante de ingresos' },
+                    { key: 'propertyAppraisal', label: 'Certificado de avalúo' },
+                    { key: 'firstPropertyDeed', label: 'Escritura de la primera vivienda' },
+                    { key: 'creditHistory', label: 'Historial crediticio' }
+                ];
+            case 'COMMERCIAL':
+                return [
+                    { key: 'businessFinancials', label: 'Estado financiero del negocio' },
+                    { key: 'incomeProof', label: 'Comprobante de ingresos' },
+                    { key: 'propertyAppraisal', label: 'Certificado de avalúo' },
+                    { key: 'businessPlan', label: 'Plan de negocios' }
+                ];
+            case 'RENOVATION':
+                return [
+                    { key: 'incomeProof', label: 'Comprobante de ingresos' },
+                    { key: 'renovationBudget', label: 'Presupuesto de la remodelación' },
+                    { key: 'updatedAppraisal', label: 'Certificado de avalúo actualizado' }
+                ];
+            default:
+                return [];
+        }
+    };
 
     useEffect(() => {
         if (!currentUser) {
@@ -114,7 +143,7 @@ const LoanApplication = () => {
                 break;
 
             case 2: // Documentación
-                requiredDocuments.forEach(doc => {
+                getRequiredDocuments(formData.propertyType).forEach(doc => {
                     if (!formData.documents[doc.key]) {
                         newErrors[`document_${doc.key}`] = `El documento ${doc.label} es requerido`;
                     }
@@ -312,7 +341,7 @@ const LoanApplication = () => {
             case 2:
                 return (
                     <Grid container spacing={3}>
-                        {requiredDocuments.map((doc) => (
+                        {getRequiredDocuments(formData.propertyType).map((doc) => (
                             <Grid item xs={12} key={doc.key}>
                                 <TextField
                                     type="file"
@@ -366,7 +395,7 @@ const LoanApplication = () => {
                                 </Grid>
                                 <Grid item xs={12}>
                                     <Typography variant="subtitle1">Documentos Adjuntos</Typography>
-                                    {requiredDocuments.map((doc) => (
+                                    {getRequiredDocuments(formData.propertyType).map((doc) => (
                                         <Typography key={doc.key}>
                                             {doc.label}: {formData.documents[doc.key]?.name || 'No adjuntado'}
                                         </Typography>
@@ -383,6 +412,9 @@ const LoanApplication = () => {
 
     return (
         <Box sx={{ 
+            position: 'absolute',
+            width: '100%',
+            left: 0,
             minHeight: '100vh', 
             bgcolor: 'background.default',
             pt: 10,
@@ -390,7 +422,7 @@ const LoanApplication = () => {
             display: 'flex',
             justifyContent: 'center'
         }}>
-            <Container maxWidth="md" sx={{ ml: { xs: 4, sm: 8, md: 45 }, mr: 'auto' }}>
+           <Container maxWidth="md">
                 <Card sx={{ boxShadow: 3 }}>
                     <CardContent sx={{ p: 4 }}>
                         <Typography variant="h4" component="h1" gutterBottom textAlign="center">
