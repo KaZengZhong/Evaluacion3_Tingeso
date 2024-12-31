@@ -19,10 +19,12 @@ import {
     DialogContent,
     DialogActions,
     Paper,
-    Slider
+    Slider,
+    IconButton
 } from '@mui/material';
 import ApplicationService from '../services/application.service';
 import UserService from '../services/user.service';
+import CloseIcon from '@mui/icons-material/Close';
 
 const LoanApplication = () => {
     const navigate = useNavigate();
@@ -157,6 +159,188 @@ const LoanApplication = () => {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
+    const convertToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);  // Esto ya incluirá el prefijo data:
+            
+            reader.onload = () => {
+                console.log('Base64 generado:', reader.result.substring(0, 50) + '...'); // Para debug
+                resolve(reader.result);
+            };
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
+    const handleFileChange = async (e, documentKey) => {
+        try {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            console.log('Tipo de archivo:', file.type); // Para debug
+
+            // Validar tipo de archivo
+            const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+            if (!allowedTypes.includes(file.type)) {
+                setErrors(prev => ({
+                    ...prev,
+                    [`document_${documentKey}`]: 'Solo se permiten archivos PDF, JPG o PNG'
+                }));
+                return;
+            }
+
+            // Validar tamaño (5MB máximo)
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                setErrors(prev => ({
+                    ...prev,
+                    [`document_${documentKey}`]: 'El archivo no debe superar 5MB'
+                }));
+                return;
+            }
+
+            // Convertir a Base64
+            const base64 = await convertToBase64(file);
+
+            setFormData({
+                ...formData,
+                documents: {
+                    ...formData.documents,
+                    [documentKey]: {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        content: base64 // Aquí guardamos el archivo en Base64
+                    }
+                }
+            });
+
+            // Para debug
+            console.log('Documento guardado:', {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                contentPreview: base64.substring(0, 50) + '...'
+            });
+
+        } catch (error) {
+            console.error('Error al procesar el archivo:', error);
+            setErrors(prev => ({
+                ...prev,
+                [`document_${documentKey}`]: 'Error al procesar el archivo'
+            }));
+        }
+    };
+
+
+
+    const [previewDialog, setPreviewDialog] = useState(false);
+    const [previewFile, setPreviewFile] = useState(null);
+
+    const handlePreviewFile = (fileData) => {
+        setPreviewFile(fileData);
+        setPreviewDialog(true);
+    };
+
+    const FilePreviewDialog = ({ file, open, onClose }) => {
+        if (!file) return null;
+    
+        console.log('Intentando mostrar archivo:', {
+            name: file.name,
+            type: file.type,
+            contentPreview: file.content?.substring(0, 50) + '...'
+        });
+    
+        return (
+            <Dialog 
+                open={open} 
+                onClose={onClose}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle>
+                    {file.name}
+                    <IconButton
+                        onClick={onClose}
+                        sx={{ position: 'absolute', right: 8, top: 8 }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    {file.type.includes('image') ? (
+                        <>
+                            <Typography variant="caption" display="block" gutterBottom>
+                                Tipo de archivo: {file.type}
+                            </Typography>
+                            <img 
+                                src={file.content}
+                                alt={file.name}
+                                style={{ maxWidth: '100%', height: 'auto' }}
+                                onError={(e) => {
+                                    console.error('Error al cargar imagen:', e);
+                                    e.target.src = ''; // Limpiar la fuente si hay error
+                                    e.target.alt = 'Error al cargar la imagen';
+                                }}
+                            />
+                        </>
+                    ) : file.type === 'application/pdf' ? (
+                        <>
+                            <Typography variant="caption" display="block" gutterBottom>
+                                PDF Preview
+                            </Typography>
+                            <object
+                                data={file.content}
+                                type="application/pdf"
+                                width="100%"
+                                height="500px"
+                            >
+                                <Typography>No se puede mostrar el PDF</Typography>
+                            </object>
+                        </>
+                    ) : (
+                        <Typography>
+                            Tipo de archivo no soportado: {file.type}
+                        </Typography>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={onClose}>Cerrar</Button>
+                </DialogActions>
+            </Dialog>
+        );
+    };
+
+    // En la sección donde muestras los documentos, agregar botón de previsualización
+    const renderDocumentUpload = (doc) => (
+        <Grid item xs={12} key={doc.key}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <TextField
+                    type="file"
+                    fullWidth
+                    label={doc.label}
+                    onChange={(e) => handleFileChange(e, doc.key)}
+                    error={!!errors[`document_${doc.key}`]}
+                    helperText={errors[`document_${doc.key}`]}
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
+                />
+                {formData.documents[doc.key] && (
+                    <Button 
+                        variant="outlined"
+                        onClick={() => handlePreviewFile(formData.documents[doc.key])}
+                    >
+                        Ver archivo
+                    </Button>
+                )}
+            </Box>
+        </Grid>
+    );
+
+
+
 
     const handleNext = () => {
         if (validateStep(activeStep)) {
@@ -338,79 +522,73 @@ const LoanApplication = () => {
                         )}
                     </Grid>
                 );
-            case 2:
-                return (
-                    <Grid container spacing={3}>
-                        {getRequiredDocuments(formData.propertyType).map((doc) => (
-                            <Grid item xs={12} key={doc.key}>
-                                <TextField
-                                    type="file"
-                                    fullWidth
-                                    label={doc.label}
-                                    onChange={(e) => setFormData({
-                                        ...formData,
-                                        documents: {
-                                            ...formData.documents,
-                                            [doc.key]: e.target.files[0]
-                                        }
-                                    })}
-                                    error={!!errors[`document_${doc.key}`]}
-                                    helperText={errors[`document_${doc.key}`]}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                />
+                case 2:
+                    return (
+                        <Grid container spacing={3}>
+                            {getRequiredDocuments(formData.propertyType).map((doc) => 
+                                renderDocumentUpload(doc)
+                            )}
+                            <Grid item xs={12}>
+                                <Alert severity="info">
+                                    Todos los documentos deben estar en formato PDF o imagen (JPG, PNG)
+                                </Alert>
                             </Grid>
-                        ))}
-                        <Grid item xs={12}>
-                            <Alert severity="info">
-                                Todos los documentos deben estar en formato PDF o imagen (JPG, PNG)
-                            </Alert>
                         </Grid>
-                    </Grid>
-                );
+                    );
 
-            case 3:
-                return (
-                    <Box>
-                        <Typography variant="h6" gutterBottom>
-                            Resumen de la Solicitud
-                        </Typography>
-                        <Paper elevation={0} sx={{ p: 3, bgcolor: 'grey.50' }}>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12}>
-                                    <Typography variant="subtitle1">Información Laboral y Financiera</Typography>
-                                    <Typography>Ingreso Mensual: ${formData.monthlyIncome}</Typography>
-                                    <Typography>Años de Empleo: {formData.employmentYears}</Typography>
-                                    <Typography>Tasa de Interés Anual: {formData.interestRate}%</Typography>
+                case 3:
+                    return (
+                        <Box>
+                            <Typography variant="h6" gutterBottom>
+                                Resumen de la Solicitud
+                            </Typography>
+                            <Paper elevation={0} sx={{ p: 3, bgcolor: 'grey.50' }}>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12}>
+                                        <Typography variant="subtitle1">Información Laboral y Financiera</Typography>
+                                        <Typography>Ingreso Mensual: ${formData.monthlyIncome}</Typography>
+                                        <Typography>Años de Empleo: {formData.employmentYears}</Typography>
+                                        <Typography>Tasa de Interés Anual: {formData.interestRate}%</Typography>
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <Typography variant="subtitle1">Detalles del Préstamo</Typography>
+                                        <Typography>Tipo de Propiedad: {
+                                            propertyTypes.find(type => type.value === formData.propertyType)?.label
+                                        }</Typography>
+                                        <Typography>Monto Solicitado: ${formData.requestedAmount}</Typography>
+                                        <Typography>Plazo: {formData.term} años</Typography>
+                                        <Typography>Valor de la Propiedad: ${formData.propertyValue}</Typography>
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <Typography variant="subtitle1">Documentos Adjuntos</Typography>
+                                        {getRequiredDocuments(formData.propertyType).map((doc) => (
+                                            <Box key={doc.key} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                                                <Typography>
+                                                    {doc.label}: {formData.documents[doc.key]?.name || 'No adjuntado'}
+                                                </Typography>
+                                                {formData.documents[doc.key] && (
+                                                    <Button 
+                                                        size="small"
+                                                        variant="outlined"
+                                                        onClick={() => handlePreviewFile(formData.documents[doc.key])}
+                                                    >
+                                                        Ver archivo
+                                                    </Button>
+                                                )}
+                                            </Box>
+                                        ))}
+                                    </Grid>
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <Typography variant="subtitle1">Detalles del Préstamo</Typography>
-                                    <Typography>Tipo de Propiedad: {
-                                        propertyTypes.find(type => type.value === formData.propertyType)?.label
-                                    }</Typography>
-                                    <Typography>Monto Solicitado: ${formData.requestedAmount}</Typography>
-                                    <Typography>Plazo: {formData.term} años</Typography>
-                                    <Typography>Valor de la Propiedad: ${formData.propertyValue}</Typography>
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <Typography variant="subtitle1">Documentos Adjuntos</Typography>
-                                    {getRequiredDocuments(formData.propertyType).map((doc) => (
-                                        <Typography key={doc.key}>
-                                            {doc.label}: {formData.documents[doc.key]?.name || 'No adjuntado'}
-                                        </Typography>
-                                    ))}
-                                </Grid>
-                            </Grid>
-                        </Paper>
-                    </Box>
-                );
+                            </Paper>
+                        </Box>
+                    );
             default:
                 return 'Paso Desconocido';
         }
     };
 
     return (
+        <>
         <Box sx={{ 
             position: 'absolute',
             width: '100%',
@@ -482,6 +660,15 @@ const LoanApplication = () => {
                 </Dialog>
             </Container>
         </Box>
+        <FilePreviewDialog
+                file={previewFile}
+                open={previewDialog}
+                onClose={() => {
+                    setPreviewDialog(false);
+                    setPreviewFile(null);
+                }}
+            />
+        </>
     );
 };
 
