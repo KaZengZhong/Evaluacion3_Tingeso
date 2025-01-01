@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Map;
-import java.util.HashMap;
 
 @Service
 public class UserService {
@@ -16,12 +14,9 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-
-
     public UserEntity createUser(UserEntity user) {
         return userRepository.save(user);
     }
-
 
     public Optional<UserEntity> getUserById(Long id) {
         return userRepository.findById(id);

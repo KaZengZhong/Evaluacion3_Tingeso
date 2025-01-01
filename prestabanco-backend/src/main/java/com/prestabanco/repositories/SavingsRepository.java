@@ -7,6 +7,8 @@ import java.util.Optional;
 
 @Repository
 public interface SavingsRepository extends JpaRepository<SavingsEntity, Long> {
+
     Optional<SavingsEntity> findByUserId(Long userId);
+
     Optional<SavingsEntity> findByAccountNumber(String accountNumber);
 }

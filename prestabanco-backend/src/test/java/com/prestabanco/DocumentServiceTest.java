@@ -1,9 +1,6 @@
 package com.prestabanco;
 
-import com.prestabanco.entities.DocumentEntity;
 import com.prestabanco.entities.ApplicationEntity;
-import com.prestabanco.repositories.DocumentRepository;
-import com.prestabanco.services.DocumentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -10,7 +10,4 @@ import java.util.List;
 public interface ApplicationRepository extends JpaRepository<ApplicationEntity, Long> {
     
     List<ApplicationEntity> findByUserId(Long userId);
-    
-    List<ApplicationEntity> findByStatus(ApplicationEntity.ApplicationStatus status);
-
 }

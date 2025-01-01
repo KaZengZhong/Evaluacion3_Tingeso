@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import java.math.BigDecimal;
 
 @Entity
@@ -20,14 +19,9 @@ public class ApplicationEntity {
     @Column(unique = true, nullable = false)
     private Long id;
 
-
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;
-
-
-
 
     private PropertyType propertyType;
     private BigDecimal requestedAmount;
@@ -42,7 +36,6 @@ public class ApplicationEntity {
 
     @Column(columnDefinition = "text")
     private String documents;
-
 
     public enum PropertyType {
         FIRST_HOME,

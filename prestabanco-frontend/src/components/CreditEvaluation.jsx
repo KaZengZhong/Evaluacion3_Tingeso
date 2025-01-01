@@ -1,9 +1,6 @@
 // src/components/CreditEvaluation.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import CloseIcon from '@mui/icons-material/Close';
-import { Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
-
 import {
     Box,
     Container,
@@ -26,80 +23,6 @@ function CreditEvaluation() {
     const [error, setError] = useState(null);
     const [evaluationResults, setEvaluationResults] = useState(null);
     const [totalCost, setTotalCost] = useState(null);
-
-    // Agregar estos estados para el manejo de documentos
-    const [previewDialog, setPreviewDialog] = useState(false);
-    const [previewFile, setPreviewFile] = useState(null);
-
-    const handlePreviewFile = (fileData) => {
-        setPreviewFile(fileData);
-        setPreviewDialog(true);
-    };
-
-
-    const FilePreviewDialog = ({ file, open, onClose }) => {
-        if (!file) return null;
-    
-        return (
-            <Dialog 
-                open={open} 
-                onClose={onClose}
-                maxWidth="md"
-                fullWidth
-            >
-                <DialogTitle>
-                    {file.name}
-                    <IconButton
-                        onClick={onClose}
-                        sx={{ position: 'absolute', right: 8, top: 8 }}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent>
-                    {file.type.includes('image') ? (
-                        <>
-                            <Typography variant="caption" display="block" gutterBottom>
-                                Tipo de archivo: {file.type}
-                            </Typography>
-                            <img 
-                                src={file.content}
-                                alt={file.name}
-                                style={{ maxWidth: '100%', height: 'auto' }}
-                                onError={(e) => {
-                                    console.error('Error al cargar imagen:', e);
-                                    e.target.src = '';
-                                    e.target.alt = 'Error al cargar la imagen';
-                                }}
-                            />
-                        </>
-                    ) : file.type === 'application/pdf' ? (
-                        <>
-                            <Typography variant="caption" display="block" gutterBottom>
-                                PDF Preview
-                            </Typography>
-                            <object
-                                data={file.content}
-                                type="application/pdf"
-                                width="100%"
-                                height="500px"
-                            >
-                                <Typography>No se puede mostrar el PDF</Typography>
-                            </object>
-                        </>
-                    ) : (
-                        <Typography>
-                            Tipo de archivo no soportado: {file.type}
-                        </Typography>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={onClose}>Cerrar</Button>
-                </DialogActions>
-            </Dialog>
-        );
-    };
-
 
     useEffect(() => {
         const fetchApplicationAndEvaluate = async () => {
@@ -143,16 +66,8 @@ function CreditEvaluation() {
     }
 
     return (
-        <Box sx={{ 
-            position: 'absolute',
-            width: '100%',
-            left: 0,
-            minHeight: '100vh', 
-            bgcolor: 'background.default',
-            pt: 10,
-            pb: 4
-        }}>
-           <Container maxWidth="lg">
+        <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pt: 10, pb: 4 }}>
+           <Container maxWidth="lg" sx={{ ml: { xs: 4, sm: 8, md: 20 }, mr: 'auto' }}>
                 {error && (
                     <Alert severity="error" sx={{ mb: 3 }}>
                         {error}
@@ -275,41 +190,6 @@ function CreditEvaluation() {
                             </CardContent>
                         </Card>
                     </Grid>
-                    
-
-
-                    <Grid item xs={12}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Documentos Adjuntos
-                                </Typography>
-                                <Grid container spacing={2}>
-                                    {application?.documents && Object.entries(application.documents).map(([key, doc]) => (
-                                        <Grid item xs={12} md={6} key={key}>
-                                            <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <Typography>
-                                                        {doc.name}
-                                                    </Typography>
-                                                    {doc.content && (
-                                                        <Button 
-                                                            variant="outlined" 
-                                                            size="small"
-                                                            onClick={() => handlePreviewFile(doc)}
-                                                        >
-                                                            Ver documento
-                                                        </Button>
-                                                    )}
-                                                </Box>
-                                            </Paper>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-
 
                     {/* Resultados de la evaluación */}
                     {evaluationResults && (
@@ -361,21 +241,11 @@ function CreditEvaluation() {
                             </CardContent>
                         </Card>
                     </Grid>
-
-                    
                 )}
 
               
                 </Grid>
             </Container>
-            <FilePreviewDialog
-                file={previewFile}
-                open={previewDialog}
-                onClose={() => {
-                    setPreviewDialog(false);
-                    setPreviewFile(null);
-                }}
-            />
         </Box>
     );
 }

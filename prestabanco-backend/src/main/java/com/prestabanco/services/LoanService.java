@@ -6,7 +6,6 @@ import com.prestabanco.entities.ApplicationEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +31,10 @@ public class LoanService {
         return loanRepository.findByUserIdAndPropertyType(userId, propertyType);
     }
 
+    public List<LoanEntity> getAllLoans() {
+        return loanRepository.findAll();
+    }
+
     public LoanEntity updateLoan(LoanEntity loan) {
         return loanRepository.save(loan);
     }
@@ -40,7 +43,4 @@ public class LoanService {
         loanRepository.deleteById(id);
     }
 
-    public List<LoanEntity> getAllLoans() {
-        return loanRepository.findAll();
-    }
 }

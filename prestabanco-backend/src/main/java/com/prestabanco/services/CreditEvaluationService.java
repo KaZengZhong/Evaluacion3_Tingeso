@@ -11,8 +11,6 @@ import java.util.*;
 import java.math.RoundingMode;
 import lombok.AllArgsConstructor;
 
-
-
 @Service
 public class CreditEvaluationService {
 
