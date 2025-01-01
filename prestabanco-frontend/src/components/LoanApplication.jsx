@@ -47,9 +47,6 @@ const LoanApplication = () => {
         propertyValue: '',
         documentationComplete: false,
         documents: {
-            incomeProof: null,
-            propertyAppraisal: null,
-            creditHistory: null
         }
     });
 
@@ -368,6 +365,30 @@ const LoanApplication = () => {
     const handleSubmit = async () => {
         setLoading(true);
         try {
+
+            // Creamos un objeto limpio para los documentos
+            const documentsToSend = {};
+            
+            // Procesamos cada documento
+            Object.entries(formData.documents).forEach(([key, doc]) => {
+                if (doc && doc.content) {
+                    documentsToSend[key] = {
+                        name: doc.name,
+                        type: doc.type,
+                        content: doc.content
+                    };
+                }
+            });
+
+            const jsonString = JSON.stringify(documentsToSend);
+            console.log('Tamaño de los documentos en bytes:', new Blob([jsonString]).size);
+
+            if (new Blob([jsonString]).size > 1024 * 1024 * 10) { // 10MB límite
+                throw new Error('Los documentos son demasiado grandes. El límite es 10MB.');
+            }
+        
+
+
             const applicationData = {
                 user: currentUser,
                 propertyType: formData.propertyType,
@@ -379,8 +400,11 @@ const LoanApplication = () => {
                 employmentYears: parseInt(formData.employmentYears),
                 currentDebt: parseFloat(formData.currentDebt || 0),
                 propertyValue: parseFloat(formData.propertyValue),
-                documentationComplete: true
+                documentationComplete: true,
+                documents: jsonString
             };
+
+            console.log('Enviando aplicación:', applicationData);
 
             await ApplicationService.create(applicationData);
             navigate('/applications');

@@ -9,16 +9,89 @@ import {
     Alert, 
     Chip,
     CircularProgress,
-    Paper
+    Paper,
+    Dialog, 
+    DialogTitle, 
+    DialogContent, 
+    DialogActions, 
+    IconButton,
+    Button
 } from '@mui/material';
 import ApplicationService from '../services/application.service';
 import UserService from '../services/user.service';
+import CloseIcon from '@mui/icons-material/Close';
+
 
 function ApplicationStatus() {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const currentUser = UserService.getCurrentUser();
+    const [previewDialog, setPreviewDialog] = useState(false);
+    const [previewFile, setPreviewFile] = useState(null);
+
+    const handlePreviewFile = (fileData) => {
+        setPreviewFile(fileData);
+        setPreviewDialog(true);
+    };
+
+    const FilePreviewDialog = ({ file, open, onClose }) => {
+        if (!file) return null;
+    
+        return (
+            <Dialog 
+                open={open} 
+                onClose={onClose}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle>
+                    {file.name}
+                    <IconButton
+                        onClick={onClose}
+                        sx={{ position: 'absolute', right: 8, top: 8 }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    {file.type.includes('image') ? (
+                        <>
+                            <Typography variant="caption" display="block" gutterBottom>
+                                Tipo de archivo: {file.type}
+                            </Typography>
+                            <img 
+                                src={file.content}
+                                alt={file.name}
+                                style={{ maxWidth: '100%', height: 'auto' }}
+                            />
+                        </>
+                    ) : file.type === 'application/pdf' ? (
+                        <>
+                            <Typography variant="caption" display="block" gutterBottom>
+                                PDF Preview
+                            </Typography>
+                            <object
+                                data={file.content}
+                                type="application/pdf"
+                                width="100%"
+                                height="500px"
+                            >
+                                <Typography>No se puede mostrar el PDF</Typography>
+                            </object>
+                        </>
+                    ) : (
+                        <Typography>
+                            Tipo de archivo no soportado: {file.type}
+                        </Typography>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={onClose}>Cerrar</Button>
+                </DialogActions>
+            </Dialog>
+        );
+    };
 
     useEffect(() => {
         const fetchApplications = async () => {
@@ -201,12 +274,59 @@ function ApplicationStatus() {
                                         {getStatusInfo(application.status).description}
                                     </Typography>
                                 </Box>
+
+                                {application.documents && (
+                                    <>
+                                        <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
+                                            Documentos Adjuntos
+                                        </Typography>
+                                        <Grid container spacing={2}>
+                                            {Object.entries(JSON.parse(application.documents || '{}')).map(([key, doc]) => (
+                                                <Grid item xs={12} md={6} key={key}>
+                                                    <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <Box>
+                                                                <Typography color="text.secondary" gutterBottom>
+                                                                    {key === 'incomeProof' ? 'Comprobante de Ingresos' :
+                                                                    key === 'propertyAppraisal' ? 'Certificado de Avalúo' :
+                                                                    key === 'creditHistory' ? 'Historial Crediticio' :
+                                                                    key}
+                                                                </Typography>
+                                                                <Typography variant="body2">
+                                                                    {doc.name}
+                                                                </Typography>
+                                                            </Box>
+                                                            {doc.content && (
+                                                                <Button 
+                                                                    variant="outlined" 
+                                                                    size="small"
+                                                                    onClick={() => handlePreviewFile(doc)}
+                                                                >
+                                                                    Ver documento
+                                                                </Button>
+                                                            )}
+                                                        </Box>
+                                                    </Paper>
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    </>
+                                )}
                             </CardContent>
                         </Card>
                     ))
                 )}
             </Container>
+            <FilePreviewDialog
+                file={previewFile}
+                open={previewDialog}
+                onClose={() => {
+                    setPreviewDialog(false);
+                    setPreviewFile(null);
+                }}
+            />
         </Box>
+        
     );
 }
 

@@ -16,7 +16,11 @@ public class ApplicationService {
 
     @Autowired
     private ApplicationRepository applicationRepository;
-    
+
+    public ApplicationEntity saveApplicationWithDocuments(ApplicationEntity application, String documentsJson) {
+        application.setDocuments(documentsJson);
+        return applicationRepository.save(application);
+    }
 
 
     public ApplicationEntity createApplication(ApplicationEntity application) {

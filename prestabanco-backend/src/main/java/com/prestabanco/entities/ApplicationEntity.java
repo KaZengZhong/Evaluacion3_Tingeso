@@ -20,9 +20,13 @@ public class ApplicationEntity {
     @Column(unique = true, nullable = false)
     private Long id;
 
+
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;
+
+
 
 
     private PropertyType propertyType;
@@ -35,6 +39,9 @@ public class ApplicationEntity {
     private BigDecimal currentDebt;
     private BigDecimal propertyValue;
     private Boolean documentationComplete;
+
+    @Column(columnDefinition = "text")
+    private String documents;
 
 
     public enum PropertyType {
@@ -55,6 +62,8 @@ public class ApplicationEntity {
         CANCELLED,
         IN_DISBURSEMENT
     }
+
+
 
 
 }
