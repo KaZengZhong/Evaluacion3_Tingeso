@@ -19,18 +19,17 @@ import {
     TextField
 } from '@mui/material';
 import ApplicationService from '../services/application.service';
-import UserService from '../services/user.service';
-import { useNavigate } from 'react-router-dom'; // Importar useNavigate
+import { useNavigate } from 'react-router-dom'; 
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 
 
 function ApplicationManagement() {
-    const navigate = useNavigate(); // Inicializar useNavigate
+    const navigate = useNavigate(); 
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [successMessage, setSuccessMessage] = useState(null); // Nuevo estado para mensajes de éxito
+    const [successMessage, setSuccessMessage] = useState(null); 
     const [selectedApplication, setSelectedApplication] = useState(null);
     const [openDialog, setOpenDialog] = useState(false);
     const [previewDialog, setPreviewDialog] = useState(false);
@@ -43,7 +42,6 @@ function ApplicationManagement() {
 
     const FilePreviewDialog = ({ file, open, onClose }) => {
         if (!file) return null;
-    
         return (
             <Dialog 
                 open={open} 
@@ -99,7 +97,6 @@ function ApplicationManagement() {
         );
     };
 
-    
     const applicationStatuses = [
         { value: 'IN_REVIEW', label: 'En Revisión Inicial' },
         { value: 'PENDING_DOCUMENTS', label: 'Pendiente de Documentación' },
@@ -131,7 +128,7 @@ function ApplicationManagement() {
     const handleStatusChange = async (applicationId, newStatus) => {
         try {
             await ApplicationService.updateStatus(applicationId, newStatus);
-            await fetchApplications(); // Recargar lista
+            await fetchApplications(); 
             setOpenDialog(false);
         } catch (err) {
             setError('Error al actualizar el estado');
@@ -140,8 +137,7 @@ function ApplicationManagement() {
     };
 
     const handleEvaluateCredit = (applicationId) => {
-        // Navegar a la pestaña de /credit
-        navigate(`/credit/${applicationId}`); // Aquí puedes pasar el ID si necesitas hacerlo en la nueva ruta
+        navigate(`/credit/${applicationId}`);
     };
 
     const getStatusInfo = (status) => {
@@ -227,9 +223,9 @@ function ApplicationManagement() {
                                     </Button>
                                     <Button
                                         variant="contained"
-                                        color="secondary" // Cambiar color si es necesario
-                                        sx={{ ml: 2 }} // Margen izquierdo para separar botones
-                                        onClick={() => handleEvaluateCredit(application.id)} // Navega a la pestaña de crédito
+                                        color="secondary" 
+                                        sx={{ ml: 2 }} 
+                                        onClick={() => handleEvaluateCredit(application.id)} 
                                     >
                                         Evaluar Crédito
                                     </Button>

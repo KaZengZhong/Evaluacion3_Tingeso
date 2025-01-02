@@ -72,6 +72,7 @@ const LoanSimulator = () => {
     return (
         <Box sx={{ 
             position: 'absolute',
+            backgroundColor: '#fff',
             width: '100%',
             left: 0,
             display: 'flex', 
@@ -164,7 +165,7 @@ const LoanSimulator = () => {
                             sx={{ mt: 4, py: 1.5 }}
                             onClick={handleSimulate}
                         >
-                            Simular Préstamo (Chile)
+                            Simular Préstamo
                         </Button>
                     </CardContent>
                 </Card>

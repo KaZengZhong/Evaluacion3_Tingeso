@@ -29,20 +29,17 @@ function CreditEvaluation() {
         accountNumber: '',
         currentBalance: '',
         monthlyDepositsCount: 0,
-        monthlyDepositsAmount: 0,
-        largestWithdrawalLast6Months: 0,
+        monthlyDepositsAmount: '',
+        largestWithdrawalLast6Months: '',
         consecutiveMonthsWithBalance: 0,
         significantWithdrawalsCount: 0,
         lastSixMonthsAverageBalance: 0,
-        meetsSavingsCriteria: false, // Agregado
+        meetsSavingsCriteria: false, 
         openingDate: null,
         lastTransactionDate: null
     });
 
     const [savingsMessage, setSavingsMessage] = useState({ type: '', message: '' });
-
-   
-
 
     const performEvaluation = async (applicationData) => {  // Recibir application como parámetro
         try {
@@ -50,7 +47,7 @@ function CreditEvaluation() {
             setEvaluationResults(evaluationResponse.data);
     
             const costResponse = await LoanService.calculateCost({
-                amount: applicationData.requestedAmount,  // Usar el parámetro
+                amount: applicationData.requestedAmount,  
                 interestRate: applicationData.interestRate,
                 term: applicationData.term
             });
@@ -309,7 +306,7 @@ function CreditEvaluation() {
                                     <Grid item xs={12} md={6}>
                                         <TextField
                                             fullWidth
-                                            label="Número de Cuenta"
+                                            label="Número de cuenta"
                                             value={savingsData.accountNumber}
                                             onChange={(e) => setSavingsData({
                                                 ...savingsData,
@@ -321,12 +318,15 @@ function CreditEvaluation() {
                                         <TextField
                                             fullWidth
                                             type="number"
-                                            label="Balance Actual"
+                                            label="Saldo en la cuenta"
                                             value={savingsData.currentBalance}
                                             onChange={(e) => setSavingsData({
                                                 ...savingsData,
                                                 currentBalance: e.target.value
                                             })}
+                                            InputProps={{
+                                                startAdornment: '$'
+                                            }}
                                         />
                                     </Grid>
                                    
@@ -334,51 +334,44 @@ function CreditEvaluation() {
                                         <TextField
                                             fullWidth
                                             type="number"
-                                            label="Monto de Depósitos Mensuales"
+                                            label="Ingresos mensuales a la cuenta"
                                             value={savingsData.monthlyDepositsAmount}
                                             onChange={(e) => setSavingsData({
                                                 ...savingsData,
                                                 monthlyDepositsAmount: e.target.value
                                             })}
+                                            InputProps={{
+                                                startAdornment: '$'
+                                            }}
                                         />
                                     </Grid>
                                     <Grid item xs={12} md={6}>
                                         <TextField
                                             fullWidth
                                             type="number"
-                                            label="Mayor Retiro (Últimos 6 meses)"
+                                            label="Mayor retiro (Últimos 6 meses)"
                                             value={savingsData.largestWithdrawalLast6Months}
                                             onChange={(e) => setSavingsData({
                                                 ...savingsData,
                                                 largestWithdrawalLast6Months: e.target.value
                                             })}
+                                            InputProps={{
+                                                startAdornment: '$'
+                                            }}
                                         />
                                     </Grid>
                                     <Grid item xs={12} md={6}>
                                         <TextField
                                             fullWidth
                                             type="number"
-                                            label="Meses Consecutivos con Balance"
+                                            label="Meses consecutivos sin retiros significativos (>50% saldo)"
                                             value={savingsData.consecutiveMonthsWithBalance}
                                             onChange={(e) => setSavingsData({
                                                 ...savingsData,
                                                 consecutiveMonthsWithBalance: e.target.value
                                             })}
                                         />
-                                    </Grid>
-                                    <Grid item xs={12} md={6}>
-                                        <TextField
-                                            fullWidth
-                                            type="number"
-                                            label="Cantidad de Retiros Significativos"
-                                            value={savingsData.significantWithdrawalsCount || 0}
-                                            onChange={(e) => setSavingsData({
-                                                ...savingsData,
-                                                significantWithdrawalsCount: e.target.value === '' ? 0 : parseInt(e.target.value, 10)
-                                            })}
-                                        />
-                                    </Grid>
-                                    
+                                    </Grid>                              
                                     
                                 </Grid>
 

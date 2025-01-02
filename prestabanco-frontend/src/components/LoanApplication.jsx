@@ -66,8 +66,6 @@ const LoanApplication = () => {
         { value: 'RENOVATION', label: 'Remodelación', minRate: 4.5, maxRate: 6.0 }
     ];
 
-    
-
     const getRequiredDocuments = (propertyType) => {
         switch (propertyType) {
             case 'FIRST_HOME':
@@ -160,7 +158,7 @@ const LoanApplication = () => {
     const convertToBase64 = (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.readAsDataURL(file);  // Esto ya incluirá el prefijo data:
+            reader.readAsDataURL(file); 
             
             reader.onload = () => {
                 console.log('Base64 generado:', reader.result.substring(0, 50) + '...'); // Para debug
@@ -229,8 +227,6 @@ const LoanApplication = () => {
             }));
         }
     };
-
-
 
     const [previewDialog, setPreviewDialog] = useState(false);
     const [previewFile, setPreviewFile] = useState(null);
@@ -309,7 +305,7 @@ const LoanApplication = () => {
         );
     };
 
-    // En la sección donde muestras los documentos, agregar botón de previsualización
+    // En la sección de documentos se agrega botón de previsualización
     const renderDocumentUpload = (doc) => (
         <Grid item xs={12} key={doc.key}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -335,9 +331,6 @@ const LoanApplication = () => {
             </Box>
         </Grid>
     );
-
-
-
 
     const handleNext = () => {
         if (validateStep(activeStep)) {
@@ -366,10 +359,10 @@ const LoanApplication = () => {
         setLoading(true);
         try {
 
-            // Creamos un objeto limpio para los documentos
+            // Crear un objeto limpio para los documentos
             const documentsToSend = {};
             
-            // Procesamos cada documento
+            // Procesar cada documento
             Object.entries(formData.documents).forEach(([key, doc]) => {
                 if (doc && doc.content) {
                     documentsToSend[key] = {
@@ -386,8 +379,6 @@ const LoanApplication = () => {
             if (new Blob([jsonString]).size > 1024 * 1024 * 10) { // 10MB límite
                 throw new Error('Los documentos son demasiado grandes. El límite es 10MB.');
             }
-        
-
 
             const applicationData = {
                 user: currentUser,
@@ -416,6 +407,7 @@ const LoanApplication = () => {
             setOpenDialog(false);
         }
     };
+
     const getStepContent = (step) => {
         switch (step) {
             case 0:
@@ -450,7 +442,6 @@ const LoanApplication = () => {
                         </Grid>
                     </Grid>
                 );
-
             case 1:
                 return (
                     <Grid container spacing={3}>
@@ -559,7 +550,6 @@ const LoanApplication = () => {
                             </Grid>
                         </Grid>
                     );
-
                 case 3:
                     return (
                         <Box>

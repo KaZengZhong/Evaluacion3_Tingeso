@@ -164,16 +164,6 @@ function ApplicationStatus() {
         };
     };
 
-    const getLoanTypeName = (type) => {
-        const types = {
-            'FIRST_HOME': 'Primera Vivienda',
-            'SECOND_HOME': 'Segunda Vivienda',
-            'COMMERCIAL': 'Propiedad Comercial',
-            'REMODELING': 'Remodelación'
-        };
-        return types[type] || type;
-    };
-
     if (loading) {
         return (
             <Box sx={{ 
