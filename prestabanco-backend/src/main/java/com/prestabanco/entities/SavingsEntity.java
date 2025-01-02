@@ -36,8 +36,6 @@ public class SavingsEntity {
     private BigDecimal lastSixMonthsAverageBalance;
     private Boolean meetsSavingsCriteria;
 
-
-
 }
 
 

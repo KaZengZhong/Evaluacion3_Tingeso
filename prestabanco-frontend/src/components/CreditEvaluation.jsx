@@ -1,4 +1,3 @@
-// src/components/CreditEvaluation.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
@@ -11,10 +10,12 @@ import {
     Alert,
     CircularProgress,
     Paper,
-    Button
+    Button,
+    TextField
 } from '@mui/material';
 import ApplicationService from '../services/application.service';
 import LoanService from '../services/loan.service';
+import SavingsService from '../services/savings.service';
 
 function CreditEvaluation() {
     const { id } = useParams();
@@ -24,26 +25,76 @@ function CreditEvaluation() {
     const [evaluationResults, setEvaluationResults] = useState(null);
     const [totalCost, setTotalCost] = useState(null);
 
+    const [savingsData, setSavingsData] = useState({
+        accountNumber: '',
+        currentBalance: '',
+        monthlyDepositsCount: 0,
+        monthlyDepositsAmount: 0,
+        largestWithdrawalLast6Months: 0,
+        consecutiveMonthsWithBalance: 0,
+        significantWithdrawalsCount: 0,
+        lastSixMonthsAverageBalance: 0,
+        meetsSavingsCriteria: false, // Agregado
+        openingDate: null,
+        lastTransactionDate: null
+    });
+
+    const [savingsMessage, setSavingsMessage] = useState({ type: '', message: '' });
+
+   
+
+
+    const performEvaluation = async (applicationData) => {  // Recibir application como parámetro
+        try {
+            const evaluationResponse = await ApplicationService.evaluate(id);
+            setEvaluationResults(evaluationResponse.data);
+    
+            const costResponse = await LoanService.calculateCost({
+                amount: applicationData.requestedAmount,  // Usar el parámetro
+                interestRate: applicationData.interestRate,
+                term: applicationData.term
+            });
+            setTotalCost(costResponse.data.totalCost);
+        } catch (err) {
+            setError('Error al realizar la evaluación');
+            console.error('Error:', err);
+        }
+    };
+    
     useEffect(() => {
         const fetchApplicationAndEvaluate = async () => {
             try {
                 setLoading(true);
                 // Obtener la solicitud
                 const applicationResponse = await ApplicationService.get(id);
-                setApplication(applicationResponse.data);
+                const applicationData = applicationResponse.data;
+                setApplication(applicationData);
                 
-                // Realizar la evaluación
-                const evaluationResponse = await ApplicationService.evaluate(id);
-                setEvaluationResults(evaluationResponse.data);
-
-                // Calcular el costo total
-                const costResponse = await LoanService.calculateCost({
-                    amount: applicationResponse.data.requestedAmount,
-                    interestRate: applicationResponse.data.interestRate,
-                    term: applicationResponse.data.term
-                });
-                setTotalCost(costResponse.data.totalCost);
-
+                // Intentar obtener datos de ahorro existentes
+                try {
+                    const savingsResponse = await SavingsService.getByUserId(applicationData.user.id);
+                    if (savingsResponse.data) {
+                        setSavingsData({
+                            accountNumber: savingsResponse.data.accountNumber || '',
+                            currentBalance: savingsResponse.data.currentBalance || '',
+                            monthlyDepositsCount: savingsResponse.data.monthlyDepositsCount || 0,
+                            monthlyDepositsAmount: savingsResponse.data.monthlyDepositsAmount || 0,
+                            largestWithdrawalLast6Months: savingsResponse.data.largestWithdrawalLast6Months || 0,
+                            consecutiveMonthsWithBalance: savingsResponse.data.consecutiveMonthsWithBalance || 0,
+                            significantWithdrawalsCount: savingsResponse.data.significantWithdrawalsCount || 0,
+                            lastSixMonthsAverageBalance: savingsResponse.data.lastSixMonthsAverageBalance || 0,
+                            meetsSavingsCriteria: savingsResponse.data.meetsSavingsCriteria || false,
+                            openingDate: savingsResponse.data.openingDate,
+                            lastTransactionDate: savingsResponse.data.lastTransactionDate
+                        });
+                    }
+                } catch (err) {
+                    console.log('No hay datos de ahorro previos');
+                }
+                
+                // Realizar la evaluación inicial con los datos de la aplicación
+                await performEvaluation(applicationData);
+    
             } catch (err) {
                 setError('Error al cargar los datos');
                 console.error('Error:', err);
@@ -51,11 +102,9 @@ function CreditEvaluation() {
                 setLoading(false);
             }
         };
-
+    
         fetchApplicationAndEvaluate();
     }, [id]);
-
-
 
     if (loading) {
         return (
@@ -67,7 +116,7 @@ function CreditEvaluation() {
 
     return (
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', pt: 10, pb: 4 }}>
-           <Container maxWidth="lg" sx={{ ml: { xs: 4, sm: 8, md: 20 }, mr: 'auto' }}>
+            <Container maxWidth="lg" sx={{ ml: { xs: 4, sm: 8, md: 20 }, mr: 'auto' }}>
                 {error && (
                     <Alert severity="error" sx={{ mb: 3 }}>
                         {error}
@@ -193,57 +242,245 @@ function CreditEvaluation() {
 
                     {/* Resultados de la evaluación */}
                     {evaluationResults && (
+                        <Grid item xs={12} id="evaluation-results">
+                            <Card sx={{ mt: 3 }}>
+                                <CardContent>
+                                    <Typography variant="h6" gutterBottom>
+                                        Resultados de la Evaluación
+                                    </Typography>
+                                    <Grid container spacing={2}>
+                                        {evaluationResults.evaluationDetails.map((detail, index) => (
+                                            <Grid item xs={12} md={6} key={index}>
+                                                <Paper sx={{ 
+                                                    p: 2, 
+                                                    bgcolor: detail.passed ? 'success.light' : 'error.light'
+                                                }}>
+                                                    <Typography variant="h6" gutterBottom>
+                                                        {detail.rule}
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ mb: 2 }}>
+                                                        {detail.description}
+                                                    </Typography>
+                                                    <Typography variant="body1" fontWeight="bold">
+                                                        {detail.passed ? "CUMPLE" : "NO CUMPLE"}
+                                                    </Typography>
+                                                </Paper>
+                                            </Grid>
+                                        ))}
+
+                                        <Grid item xs={12}>
+                                            <Paper sx={{ 
+                                                p: 3, 
+                                                bgcolor: evaluationResults.approved ? 'success.light' : 'error.light',
+                                                textAlign: 'center'
+                                            }}>
+                                                <Typography variant="h5" gutterBottom>
+                                                    Resultado Final
+                                                </Typography>
+                                                <Typography variant="h4" gutterBottom>
+                                                    {evaluationResults.approved ? "APROBADO" : "RECHAZADO"}
+                                                </Typography>
+                                                <Typography variant="body1">
+                                                    {evaluationResults.message}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+                                    </Grid>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    )}
+
+                    {/* Capacidad de Ahorro */}
                     <Grid item xs={12}>
                         <Card sx={{ mt: 3 }}>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>
-                                    Resultados de la Evaluación
+                                    Evaluación de Capacidad de Ahorro
                                 </Typography>
+                                
+                                {savingsMessage.message && (
+                                    <Alert severity={savingsMessage.type} sx={{ mb: 2 }}>
+                                        {savingsMessage.message}
+                                    </Alert>
+                                )}
+
                                 <Grid container spacing={2}>
-                                    {evaluationResults.evaluationDetails.map((detail, index) => (
-                                        <Grid item xs={12} md={6} key={index}>
+                                    <Grid item xs={12} md={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="Número de Cuenta"
+                                            value={savingsData.accountNumber}
+                                            onChange={(e) => setSavingsData({
+                                                ...savingsData,
+                                                accountNumber: e.target.value
+                                            })}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <TextField
+                                            fullWidth
+                                            type="number"
+                                            label="Balance Actual"
+                                            value={savingsData.currentBalance}
+                                            onChange={(e) => setSavingsData({
+                                                ...savingsData,
+                                                currentBalance: e.target.value
+                                            })}
+                                        />
+                                    </Grid>
+                                   
+                                    <Grid item xs={12} md={6}>
+                                        <TextField
+                                            fullWidth
+                                            type="number"
+                                            label="Monto de Depósitos Mensuales"
+                                            value={savingsData.monthlyDepositsAmount}
+                                            onChange={(e) => setSavingsData({
+                                                ...savingsData,
+                                                monthlyDepositsAmount: e.target.value
+                                            })}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <TextField
+                                            fullWidth
+                                            type="number"
+                                            label="Mayor Retiro (Últimos 6 meses)"
+                                            value={savingsData.largestWithdrawalLast6Months}
+                                            onChange={(e) => setSavingsData({
+                                                ...savingsData,
+                                                largestWithdrawalLast6Months: e.target.value
+                                            })}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <TextField
+                                            fullWidth
+                                            type="number"
+                                            label="Meses Consecutivos con Balance"
+                                            value={savingsData.consecutiveMonthsWithBalance}
+                                            onChange={(e) => setSavingsData({
+                                                ...savingsData,
+                                                consecutiveMonthsWithBalance: e.target.value
+                                            })}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} md={6}>
+                                        <TextField
+                                            fullWidth
+                                            type="number"
+                                            label="Cantidad de Retiros Significativos"
+                                            value={savingsData.significantWithdrawalsCount || 0}
+                                            onChange={(e) => setSavingsData({
+                                                ...savingsData,
+                                                significantWithdrawalsCount: e.target.value === '' ? 0 : parseInt(e.target.value, 10)
+                                            })}
+                                        />
+                                    </Grid>
+                                    
+                                    
+                                </Grid>
+
+                                {savingsData.accountNumber && (
+                                <Box sx={{ mt: 4 }}>
+                                    <Typography variant="h6" gutterBottom>
+                                        Estado de Criterios de Ahorro
+                                    </Typography>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} md={6}>
                                             <Paper sx={{ 
                                                 p: 2, 
-                                                bgcolor: detail.passed ? 'success.light' : 'error.light'
+                                                bgcolor: savingsData.currentBalance >= (application?.requestedAmount * 0.10) ? 'success.light' : 'error.light'
                                             }}>
-                                                <Typography variant="h6" gutterBottom>
-                                                    {detail.rule}
+                                                <Typography variant="subtitle1" gutterBottom>
+                                                    R71: Saldo Mínimo
                                                 </Typography>
-                                                <Typography variant="body2" sx={{ mb: 2 }}>
-                                                    {detail.description}
+                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                    El saldo debe ser al menos el 10% del monto solicitado (${(application?.requestedAmount * 0.10).toLocaleString()})
                                                 </Typography>
                                                 <Typography variant="body1" fontWeight="bold">
-                                                    {detail.passed ? "CUMPLE" : "NO CUMPLE"}
+                                                    {savingsData.currentBalance >= (application?.requestedAmount * 0.10) ? "CUMPLE" : "NO CUMPLE"}
                                                 </Typography>
                                             </Paper>
                                         </Grid>
-                                    ))}
 
-                                    {/* Resultado Final */}
-                                    <Grid item xs={12}>
-                                        <Paper sx={{ 
-                                            p: 3, 
-                                            bgcolor: evaluationResults.approved ? 'success.light' : 'error.light',
-                                            textAlign: 'center'
-                                        }}>
-                                            <Typography variant="h5" gutterBottom>
-                                                Resultado Final
-                                            </Typography>
-                                            <Typography variant="h4" gutterBottom>
-                                                {evaluationResults.approved ? "APROBADO" : "RECHAZADO"}
-                                            </Typography>
-                                            <Typography variant="body1">
-                                                {evaluationResults.message}
-                                            </Typography>
-                                        </Paper>
+                                        <Grid item xs={12} md={6}>
+                                            <Paper sx={{ 
+                                                p: 2, 
+                                                bgcolor: (savingsData.consecutiveMonthsWithBalance >= 12 && savingsData.significantWithdrawalsCount === 0) ? 'success.light' : 'error.light'
+                                            }}>
+                                                <Typography variant="subtitle1" gutterBottom>
+                                                    R72: Historial de Ahorro Consistente
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                    12 meses con balance y sin retiros significativos
+                                                </Typography>
+                                                <Typography variant="body1" fontWeight="bold">
+                                                    {(savingsData.consecutiveMonthsWithBalance >= 12 && savingsData.significantWithdrawalsCount === 0) ? "CUMPLE" : "NO CUMPLE"}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+
+                                        <Grid item xs={12} md={6}>
+                                            <Paper sx={{ 
+                                                p: 2, 
+                                                bgcolor: savingsData.monthlyDepositsAmount >= (application?.monthlyIncome * 0.05) ? 'success.light' : 'error.light'
+                                            }}>
+                                                <Typography variant="subtitle1" gutterBottom>
+                                                    R73: Depósitos Periódicos
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                    Depósitos mensuales deben ser al menos 5% del ingreso (${(application?.monthlyIncome * 0.05).toLocaleString()})
+                                                </Typography>
+                                                <Typography variant="body1" fontWeight="bold">
+                                                    {savingsData.monthlyDepositsAmount >= (application?.monthlyIncome * 0.05) ? "CUMPLE" : "NO CUMPLE"}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+
+                                        <Grid item xs={12} md={6}>
+                                            <Paper sx={{ 
+                                                p: 2, 
+                                                bgcolor: savingsData.currentBalance >= (application?.requestedAmount * (savingsData.consecutiveMonthsWithBalance >= 24 ? 0.10 : 0.20)) ? 'success.light' : 'error.light'
+                                            }}>
+                                                <Typography variant="subtitle1" gutterBottom>
+                                                    R74: Relación Saldo/Años
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                    {savingsData.consecutiveMonthsWithBalance >= 24 ? 
+                                                        `Saldo debe ser al menos 10% del monto (${(application?.requestedAmount * 0.10).toLocaleString()})` :
+                                                        `Saldo debe ser al menos 20% del monto (${(application?.requestedAmount * 0.20).toLocaleString()})`}
+                                                </Typography>
+                                                <Typography variant="body1" fontWeight="bold">
+                                                    {savingsData.currentBalance >= (application?.requestedAmount * (savingsData.consecutiveMonthsWithBalance >= 24 ? 0.10 : 0.20)) ? "CUMPLE" : "NO CUMPLE"}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
+
+                                        <Grid item xs={12} md={6}>
+                                            <Paper sx={{ 
+                                                p: 2, 
+                                                bgcolor: savingsData.largestWithdrawalLast6Months <= (savingsData.currentBalance * 0.30) ? 'success.light' : 'error.light'
+                                            }}>
+                                                <Typography variant="subtitle1" gutterBottom>
+                                                    R75: Retiros Recientes
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ mb: 1 }}>
+                                                    Mayor retiro no debe superar 30% del saldo actual (${(savingsData.currentBalance * 0.30).toLocaleString()})
+                                                </Typography>
+                                                <Typography variant="body1" fontWeight="bold">
+                                                    {savingsData.largestWithdrawalLast6Months <= (savingsData.currentBalance * 0.30) ? "CUMPLE" : "NO CUMPLE"}
+                                                </Typography>
+                                            </Paper>
+                                        </Grid>
                                     </Grid>
-                                </Grid>
+                                </Box>
+                            )}   
+
                             </CardContent>
                         </Card>
                     </Grid>
-                )}
-
-              
                 </Grid>
             </Container>
         </Box>

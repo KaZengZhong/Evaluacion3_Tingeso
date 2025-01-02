@@ -79,32 +79,64 @@ public class CreditEvaluationService {
         return ageAtEnd <= (MAX_AGE_AT_END - AGE_MARGIN);
     }
 
-    // R7: Evaluación de Capacidad de Ahorro
     private boolean evaluateSavingsCapacity(SavingsEntity savings, ApplicationEntity application) {
-        if (savings == null) return false;
+        // Validación inicial
+        if (savings == null || application == null ||
+                savings.getCurrentBalance() == null ||
+                savings.getMonthlyDepositsAmount() == null ||
+                savings.getLargestWithdrawalLast6Months() == null) {
+            return false;
+        }
 
         int criteriasMet = 0;
 
-        // R71: Saldo Mínimo (10% del monto solicitado)
-        BigDecimal minBalance = application.getRequestedAmount().multiply(new BigDecimal("0.10"));
-        if (savings.getCurrentBalance().compareTo(minBalance) >= 0) criteriasMet++;
+        try {
+            // R71: Saldo Mínimo (10% del monto solicitado)
+            BigDecimal minBalance = application.getRequestedAmount().multiply(new BigDecimal("0.10"));
+            if (savings.getCurrentBalance().compareTo(minBalance) >= 0) {
+                criteriasMet++;
+            }
 
-        // R72: Historial de Ahorro Consistente
-        if (savings.getConsecutiveMonthsWithBalance() >= 12 &&
-                savings.getSignificantWithdrawalsCount() == 0) criteriasMet++;
+            // R72: Historial de Ahorro Consistente
+            if (savings.getConsecutiveMonthsWithBalance() != null &&
+                    savings.getSignificantWithdrawalsCount() != null &&
+                    savings.getConsecutiveMonthsWithBalance() >= 12 &&
+                    savings.getSignificantWithdrawalsCount() == 0) {
+                criteriasMet++;
+            }
 
-        // R73: Depósitos Periódicos (5% del ingreso mensual)
-        BigDecimal minMonthlyDeposit = application.getMonthlyIncome().multiply(new BigDecimal("0.05"));
-        if (savings.getMonthlyDepositsAmount().compareTo(minMonthlyDeposit) >= 0) criteriasMet++;
+            // R73: Depósitos Periódicos (5% del ingreso mensual)
+            BigDecimal minMonthlyDeposit = application.getMonthlyIncome().multiply(new BigDecimal("0.05"));
+            if (savings.getMonthlyDepositsAmount().compareTo(minMonthlyDeposit) >= 0) {
+                criteriasMet++;
+            }
 
-        // R74: Relación Saldo/Años
-        if (savings.getMeetsSavingsCriteria()) criteriasMet++;  // Simplificado
+            // R74: Relación Saldo/Años
+            BigDecimal requiredPercentage;
+            if (savings.getConsecutiveMonthsWithBalance() != null) {
+                requiredPercentage = savings.getConsecutiveMonthsWithBalance() < 24 ?
+                        new BigDecimal("0.20") : new BigDecimal("0.10");
+                BigDecimal requiredBalance = application.getRequestedAmount().multiply(requiredPercentage);
+                if (savings.getCurrentBalance().compareTo(requiredBalance) >= 0) {
+                    criteriasMet++;
+                }
+            }
 
-        // R75: Retiros Recientes (no más del 30% del saldo)
-        if (savings.getLargestWithdrawalLast6Months().compareTo(
-                savings.getCurrentBalance().multiply(new BigDecimal("0.30"))) <= 0) criteriasMet++;
+            // R75: Retiros Recientes (no más del 30% del saldo)
+            BigDecimal maxWithdrawal = savings.getCurrentBalance().multiply(new BigDecimal("0.30"));
+            if (savings.getLargestWithdrawalLast6Months().compareTo(maxWithdrawal) <= 0) {
+                criteriasMet++;
+            }
 
-        return criteriasMet >= 3; // Aprobado si cumple al menos 3 criterios
+            // Actualizar el criterio de ahorro
+            savings.setMeetsSavingsCriteria(criteriasMet >= 3);
+
+            return criteriasMet >= 3;
+
+        } catch (Exception e) {
+            System.err.println("Error al evaluar capacidad de ahorro: " + e.getMessage());
+            return false;
+        }
     }
 
     public CreditEvaluationResult evaluateApplication(
