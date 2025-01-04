@@ -128,7 +128,10 @@ const LoanApplication = () => {
                 if (!formData.requestedAmount || formData.requestedAmount <= 0) {
                     newErrors.requestedAmount = 'Ingrese un monto válido';
                 }
-                if (formData.requestedAmount > formData.propertyValue) {
+                const requestedAmount = parseFloat(formData.requestedAmount);
+                const propertyValue = parseFloat(formData.propertyValue);
+
+                if (!isNaN(requestedAmount) && !isNaN(propertyValue) && requestedAmount > propertyValue) {
                     newErrors.requestedAmount = 'El monto solicitado no puede ser mayor al valor de la propiedad';
                 }
                 if (!formData.term || formData.term <= 0) {
