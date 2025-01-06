@@ -51,6 +51,11 @@ const LoanApplication = () => {
     });
 
     const [errors, setErrors] = useState({});
+ 
+    const formatNumber = (value) => {
+        if (!value) return ''; 
+        return new Intl.NumberFormat('es-CL').format(value);
+    };
 
     const steps = [
         'Información Laboral', 
@@ -209,7 +214,7 @@ const LoanApplication = () => {
                         name: file.name,
                         type: file.type,
                         size: file.size,
-                        content: base64 // Aquí guardamos el archivo en Base64
+                        content: base64 // Se guarda el archivo en Base64
                     }
                 }
             });
@@ -420,15 +425,21 @@ const LoanApplication = () => {
                             <TextField
                                 fullWidth
                                 label="Ingreso Mensual"
-                                type="number"
+                                type="text"
                                 required
-                                value={formData.monthlyIncome}
-                                onChange={(e) => setFormData({...formData, monthlyIncome: e.target.value})}
+                                value={formData.monthlyIncome ? formatNumber(formData.monthlyIncome) : ''}
+                                onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, '');
+                                    setFormData({
+                                        ...formData,
+                                        monthlyIncome: value
+                                    });
+                                }}
                                 error={!!errors.monthlyIncome}
                                 helperText={errors.monthlyIncome}
                                 InputProps={{
                                     startAdornment: '$'
-                                }}
+                               }}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -470,13 +481,16 @@ const LoanApplication = () => {
                             <TextField
                                 fullWidth
                                 label="Valor Total de la Propiedad"
-                                type="number"
+                                type="text"
                                 required
-                                value={formData.propertyValue}
-                                onChange={(e) => setFormData({
-                                    ...formData,
-                                    propertyValue: e.target.value
-                                })}
+                                value={formData.propertyValue ? formatNumber(formData.propertyValue) : ''}
+                                onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, '');
+                                    setFormData({
+                                        ...formData,
+                                        propertyValue: value
+                                    });
+                                }}
                                 error={!!errors.propertyValue}
                                 helperText={errors.propertyValue}
                                 InputProps={{
@@ -488,13 +502,16 @@ const LoanApplication = () => {
                             <TextField
                                 fullWidth
                                 label="Monto Solicitado"
-                                type="number"
+                                type="text"
                                 required
-                                value={formData.requestedAmount}
-                                onChange={(e) => setFormData({
-                                    ...formData,
-                                    requestedAmount: e.target.value
-                                })}
+                                value={formData.requestedAmount ? formatNumber(formData.requestedAmount) : ''}
+                                onChange={(e) => {
+                                    const value = e.target.value.replace(/\D/g, '');
+                                    setFormData({
+                                        ...formData,
+                                        requestedAmount: value
+                                    });
+                                }}
                                 error={!!errors.requestedAmount}
                                 helperText={errors.requestedAmount}
                                 InputProps={{

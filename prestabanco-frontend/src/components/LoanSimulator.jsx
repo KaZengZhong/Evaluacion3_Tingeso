@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import LoanService from '../services/loan.service';
 import { 
     Box, 
     Container, 
@@ -16,9 +17,9 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Slider
+    Slider,
+    Alert
 } from '@mui/material';
-import LoanService from '../services/loan.service';
 
 const LoanSimulator = () => {
     const [loanData, setLoanData] = useState({
@@ -26,6 +27,13 @@ const LoanSimulator = () => {
         amount: '',
         term: '',
         interestRate: 0
+    });
+
+    const [formattedAmount, setFormattedAmount] = useState('');
+    const [errors, setErrors] = useState({
+        amount: '',
+        term: '',
+        form: ''
     });
 
     const [result, setResult] = useState(null);
@@ -44,9 +52,108 @@ const LoanSimulator = () => {
             loanType: event.target.value,
             interestRate: selectedType ? selectedType.minRate : 0
         });
+        setErrors({ ...errors, form: '' });
+    };
+
+    const formatNumber = (value) => {
+        return new Intl.NumberFormat('es-CL').format(value);
+    };
+
+    const handleAmountChange = (e) => {
+        const rawValue = e.target.value.replace(/\D/g, ''); // Solo permite números
+        
+        if (rawValue === '') {
+            setFormattedAmount('');
+            setLoanData({ ...loanData, amount: '' });
+            setErrors({ ...errors, amount: '', form: '' });
+            return;
+        }
+
+        const numberValue = parseInt(rawValue, 10);
+
+        if (numberValue <= 0) {
+            setErrors({
+                ...errors,
+                amount: 'El monto del préstamo debe ser mayor a 0',
+                form: ''
+            });
+        } else {
+            setErrors({
+                ...errors,
+                amount: '',
+                form: ''
+            });
+        }
+
+        setFormattedAmount(formatNumber(numberValue));
+        setLoanData({
+            ...loanData,
+            amount: numberValue
+        });
+    };
+
+    const handleTermChange = (e) => {
+        const value = e.target.value;
+        
+        if (value === '') {
+            setLoanData({ ...loanData, term: '' });
+            setErrors({ ...errors, term: '', form: '' });
+            return;
+        }
+
+        const numberValue = parseInt(value, 10);
+
+        if (numberValue <= 0) {
+            setErrors({
+                ...errors,
+                term: 'El plazo debe ser mayor a 0',
+                form: ''
+            });
+        } else if (numberValue > 30) {
+            setErrors({
+                ...errors,
+                term: 'El plazo máximo es de 30 años',
+                form: ''
+            });
+        } else {
+            setErrors({
+                ...errors,
+                term: '',
+                form: ''
+            });
+        }
+
+        setLoanData({
+            ...loanData,
+            term: numberValue
+        });
+    };
+
+    const validateForm = () => {
+        if (!loanData.loanType) {
+            setErrors({ ...errors, form: 'Seleccione un tipo de préstamo' });
+            return false;
+        }
+        if (!loanData.amount) {
+            setErrors({ ...errors, form: 'Ingrese el monto del préstamo' });
+            return false;
+        }
+        if (!loanData.term) {
+            setErrors({ ...errors, form: 'Ingrese el plazo del préstamo' });
+            return false;
+        }
+        if (loanData.term > 30) {
+            setErrors({ ...errors, form: 'El plazo máximo es de 30 años' });
+            return false;
+        }
+        return true;
     };
 
     const handleSimulate = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
         try {
             console.log(loanData); // Verifica los datos antes de enviarlos
             const simulateResponse = await LoanService.simulate(loanData);
@@ -58,6 +165,10 @@ const LoanSimulator = () => {
             });
         } catch (err) {
             console.error('Error al simular préstamo:', err);
+            setErrors({
+                ...errors,
+                form: 'Error al procesar la simulación. Por favor, intente nuevamente.'
+            });
         }
     };
 
@@ -79,7 +190,7 @@ const LoanSimulator = () => {
             justifyContent: 'center',
             mt: 8 
         }}>
-             <Container maxWidth="sm">
+            <Container maxWidth="sm">
                 <Card sx={{ boxShadow: 3, mb: 4 }}>
                     <CardContent sx={{ p: 4 }}>
                         <Typography variant="h4" component="h1" gutterBottom textAlign="center">
@@ -109,12 +220,10 @@ const LoanSimulator = () => {
                                     fullWidth
                                     label="Monto del Préstamo"
                                     variant="outlined"
-                                    type="number"
-                                    value={loanData.amount}
-                                    onChange={(e) => setLoanData({
-                                        ...loanData,
-                                        amount: e.target.value
-                                    })}
+                                    value={formattedAmount}
+                                    onChange={handleAmountChange}
+                                    error={!!errors.amount}
+                                    helperText={errors.amount}
                                     InputProps={{
                                         startAdornment: '$'
                                     }}
@@ -128,10 +237,9 @@ const LoanSimulator = () => {
                                     variant="outlined"
                                     type="number"
                                     value={loanData.term}
-                                    onChange={(e) => setLoanData({
-                                        ...loanData,
-                                        term: e.target.value
-                                    })}
+                                    onChange={handleTermChange}
+                                    error={!!errors.term}
+                                    helperText={errors.term}
                                     InputProps={{
                                         inputProps: { min: 1, max: 30 }
                                     }}
@@ -158,12 +266,19 @@ const LoanSimulator = () => {
                             )}
                         </Grid>
 
+                        {errors.form && (
+                            <Alert severity="error" sx={{ mt: 2 }}>
+                                {errors.form}
+                            </Alert>
+                        )}
+
                         <Button
                             variant="contained"
                             fullWidth
                             size="large"
                             sx={{ mt: 4, py: 1.5 }}
                             onClick={handleSimulate}
+                            disabled={!!errors.amount || !!errors.term}
                         >
                             Simular Préstamo
                         </Button>
@@ -188,7 +303,7 @@ const LoanSimulator = () => {
                                     <TableBody>
                                         <TableRow>
                                             <TableCell>Cuota Mensual</TableCell>
-                                            <TableCell align="right">${result.monthlyPayment}</TableCell>
+                                            <TableCell align="right">${formatNumber(Math.round(result.monthlyPayment))}</TableCell>
                                         </TableRow>
                                         <TableRow>
                                             <TableCell>Tasa de Interés Anual</TableCell>
@@ -196,7 +311,7 @@ const LoanSimulator = () => {
                                         </TableRow>
                                         <TableRow>
                                             <TableCell>Costo Total del Préstamo</TableCell>
-                                            <TableCell align="right">${result.totalCost}</TableCell>
+                                            <TableCell align="right">${formatNumber(Math.round(result.totalCost))}</TableCell>
                                         </TableRow>
                                     </TableBody>
                                 </Table>
